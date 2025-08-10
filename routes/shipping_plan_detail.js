@@ -12,9 +12,10 @@ router.get('/', authenticate, async (req, res) => {
   const { filterSql, values } = buildFilterQuery(req.query, 'spd.', withTrashed)
   const sortClause = applySorting(req.query, 'spd.id')
   const [rows] = await db.query(`
-    SELECT spd.*, pod.line AS po_line
+    SELECT spd.*, pod.line AS po_line, pod.original_quantity,p.code AS part_code, p.name AS part_name
     FROM shipping_plan_detail spd
     LEFT JOIN purchase_order_details pod ON spd.purchase_order_detail_id = pod.id
+    LEFT JOIN parts p ON p.id=pod.part_id
     ${filterSql}${sortClause}
   `, values)
   res.json(rows)

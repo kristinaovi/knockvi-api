@@ -24,7 +24,8 @@ router.get('/', authenticate, async (req, res) => {
 router.post('/', authenticate, validateSP, async (req, res) => {
   const errors = validationResult(req)
   if (!errors.isEmpty()) return res.status(422).json({ errors: errors.array() })
-  const result = await insertOrUpdate('shipping_plans', req.body, req.user.id)
+  const {invoice_id, ...restOfForm} = req.body
+  const result = await insertOrUpdate('shipping_plans', restOfForm, req.user.id)
   res.json(result)
 })
 

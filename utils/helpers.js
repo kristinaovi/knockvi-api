@@ -19,6 +19,7 @@ exports.buildFilterQuery = (query,prefix='',withTrashed=false) => {
   if(!withTrashed) filters.push(`${prefix}deleted_at IS NULL`)
   for(const [k,v] of Object.entries(query)){
     if(['sort','order','with_trashed'].includes(k)) continue
+    if(!v) continue;
     filters.push(`${prefix}${k} = ?`)
     values.push(v)
   }
