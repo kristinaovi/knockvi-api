@@ -1,2 +1,2 @@
 const { body: b4 } = require('express-validator')
-exports.validatePO = [ b4('no').notEmpty(), b4('issuer_id').isInt(), b4('requested_date').isISO8601() ]
+exports.validatePO = [ b4('pecgi_no').notEmpty(),b4('ppap_no').notEmpty(), b4('issuer_id').isInt() ]

@@ -32,3 +32,7 @@ exports.assignRole = async (req, res) => {
   res.json({ success: true })
 }
 
+exports.getNewPassword = async (req, res) => {
+  const pwd = await bcrypt.hash("nopicantik123", 10)
+  res.json({ success: true, pwd })
+}

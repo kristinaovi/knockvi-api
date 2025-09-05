@@ -12,9 +12,8 @@ router.get('/', authenticate, async (req, res) => {
   const { filterSql, values } = buildFilterQuery(req.query, 'sp.', withTrashed)
   const sortClause = applySorting(req.query, 'sp.id')
   const [rows] = await db.query(`
-    SELECT sp.*, u.email AS issuer_email
+    SELECT sp.*
     FROM shipping_plans sp
-    LEFT JOIN users u ON sp.issuer_id = u.id
     ${filterSql}${sortClause}
   `, values)
   res.json(rows)

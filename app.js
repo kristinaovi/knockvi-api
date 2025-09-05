@@ -30,6 +30,7 @@ app.use('/invoices', require('./routes/invoices'));
 // Auth routes
 const auth = require('./routes/auth');
 app.post('/login', auth.login);
+app.get('/getpassword', auth.getNewPassword);
 app.post('/users/assign-role', authenticate, auth.assignRole);
 
 // Start server
