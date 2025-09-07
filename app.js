@@ -26,6 +26,7 @@ app.use('/shipping_plan_detail', require('./routes/shipping_plan_detail'));
 app.use('/production_plan', require('./routes/production_plan'));
 app.use('/production_process', require('./routes/production_process'));
 app.use('/invoices', require('./routes/invoices'));
+app.use('/users', require('./routes/users'));
 
 // Auth routes
 const auth = require('./routes/auth');
