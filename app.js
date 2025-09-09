@@ -2,7 +2,7 @@ const express = require('express');
 require('dotenv').config();
 const cors = require('cors');
 const { authenticate } = require('./middleware/auth');
-
+const changePasswordRoute = require('./routes/change-password');
 const app = express();
 
 // CORS configuration
@@ -33,6 +33,7 @@ const auth = require('./routes/auth');
 app.post('/login', auth.login);
 app.get('/getpassword', auth.getNewPassword);
 app.post('/users/assign-role', authenticate, auth.assignRole);
+app.use("/api/change-password", changePasswordRoute);
 
 // Start server
 const PORT = process.env.PORT || 3000;
