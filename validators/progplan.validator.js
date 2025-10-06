@@ -1,5 +1,10 @@
-const { body: b8 } = require('express-validator')
-exports.validateProgPlan = [
-  b8('part_id').isInt(), b8('machine_id').isInt(), b8('status').notEmpty(),
-  b8('quantity_plan').isInt(), b8('remarks').optional(), b8('issuer_id').isInt()
-]
+const { body: b } = require('express-validator');
+
+exports.validateFrontendProgPlan = [
+  b('partId').notEmpty().withMessage('Part ID is required'),
+  b('machineNo').notEmpty().withMessage('Machine No is required'),
+  b('machineStatus').notEmpty().withMessage('Machine status is required'),
+  b('quantity').isInt().withMessage('Quantity must be an integer'),
+  b('partName').optional(),
+  b('remarks').optional()
+];

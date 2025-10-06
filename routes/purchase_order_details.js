@@ -12,41 +12,23 @@ router.get('/', authenticate, async (req, res) => {
   const { filterSql, values } = buildFilterQuery(req.query, 'pod.', withTrashed)
   const sortClause = applySorting(req.query, 'pod.id')
   const [rows] = await db.query(`
-    SELECT
-      pod.*,
-      p.name   AS part_name,
-      p.code   AS part_code,
-      po.pecgi_no,
-      po.ppap_no,
-      DATE_FORMAT(pod.request_date, '%d-%m-%Y') AS request_date_formatted,
+SELECT
+  pod.*,
+  p.name AS part_name,
+  p.code AS part_code,
+  po.pecgi_no,
+  po.ppap_no,
+  po.requested_date,
+  DATE_FORMAT(po.requested_date, '%Y-%m-%d') AS request_date_formatted,
 
-      -- join in the total already shipped per detail
-      IFNULL(spd.shipped_qty, 0)          AS shipped_qty,
+  0 AS shipped_qty,              -- selalu nol
+  pod.original_quantity AS open_quantity -- open qty = issued qty (tidak berkurang)
+FROM purchase_order_details pod
+LEFT JOIN parts p ON pod.part_id = p.id
+LEFT JOIN purchase_orders po ON pod.purchase_order_id = po.id
+${filterSql}
+${sortClause}
 
-      -- calculate open_quantity
-      pod.original_quantity - IFNULL(spd.shipped_qty, 0) AS open_quantity
-
-    FROM purchase_order_details pod
-
-    LEFT JOIN parts p
-      ON pod.part_id = p.id
-
-    LEFT JOIN purchase_orders po
-      ON pod.purchase_order_id = po.id
-
-    -- sub‑query to sum up actual_quantity per POD
-    LEFT JOIN (
-      SELECT
-        purchase_order_detail_id,
-        SUM(actual_quantity) AS shipped_qty
-      FROM shipping_plan_detail
-      WHERE deleted_at IS NULL
-      GROUP BY purchase_order_detail_id
-    ) spd
-      ON spd.purchase_order_detail_id = pod.id
-
-    ${filterSql}
-    ${sortClause}
   `, values)
   res.json(rows)
 })
@@ -55,6 +37,19 @@ router.get('/', authenticate, async (req, res) => {
 router.post('/', authenticate, validatePOD, async (req, res) => {
   const errors = validationResult(req)
   if (!errors.isEmpty()) return res.status(422).json({ errors: errors.array() })
+
+  console.log('DEBUG POST /purchase_order_details body:', req.body); // <-- tambahkan
+
+  const result = await insertOrUpdate('purchase_order_details', req.body, req.user.id)
+  res.json(result)
+})
+
+
+
+
+router.put('/:id', authenticate, validatePOD, async (req, res) => {
+  const podId = req.params.id
+  req.body.id = podId
   const result = await insertOrUpdate('purchase_order_details', req.body, req.user.id)
   res.json(result)
 })
@@ -128,8 +123,8 @@ router.get('/:id', authenticate, async (req, res) => {
       })
     })
 
-  // 4) Finally sort history by date descending (latest first)
-  history.sort((a, b) => new Date(b.date) - new Date(a.date))
+  // 4) Finally sort history by date descending (oldest first)
+  history.sort((a, b) => new Date(a.date) - new Date(b.date))
 
   res.json(history)
 })

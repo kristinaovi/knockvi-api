@@ -4,6 +4,9 @@ const cors = require('cors');
 const { authenticate } = require('./middleware/auth');
 const changePasswordRoute = require('./routes/change-password');
 const app = express();
+const customersRoute = require('./routes/customers');
+const inventoryRoutes = require('./routes/inventory');
+
 
 // CORS configuration
 app.use(cors({
@@ -27,6 +30,10 @@ app.use('/production_plan', require('./routes/production_plan'));
 app.use('/production_process', require('./routes/production_process'));
 app.use('/invoices', require('./routes/invoices'));
 app.use('/users', require('./routes/users'));
+app.use('/production', require('./routes/production'));
+app.use('/customers', customersRoute)
+app.use("/inventory", inventoryRoutes);
+
 
 // Auth routes
 const auth = require('./routes/auth');
