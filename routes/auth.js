@@ -17,7 +17,9 @@ exports.login = async (req, res) => {
     { id: user.id, email: user.email, is_admin: user.is_admin },
     process.env.JWT_SECRET
   )
-  res.json({ token })
+
+  const { password: userPassword, ...restOfUserData } = user
+  res.json({ token, user: restOfUserData })
 }
 
 exports.assignRole = async (req, res) => {
