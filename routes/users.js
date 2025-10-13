@@ -4,6 +4,7 @@ const { insertOrUpdate, softDelete, buildFilterQuery, applySorting } = require('
 const { validationResult, body } = require('express-validator');
 const { Parser } = require('json2csv');
 const { authenticate } = require('../middleware/auth');
+const bcrypt = require("bcrypt");
 
 // ===== VALIDATOR =====
 const validateUser = [
@@ -66,9 +67,10 @@ router.post('/', authenticate, validateUser, async (req, res) => {
   const errors = validationResult(req);
   if (!errors.isEmpty()) return res.status(422).json({ errors: errors.array() });
 
-  const { userName, userEmail, userBadge, userDepartment, userRole, userStatus, id } = req.body;
+  const { userName, userEmail, userBadge, userDepartment, userRole, userStatus, id, password } = req.body;
 
   // Mapping ke kolom database
+  const hashedPassword = await bcrypt.hash(password, 10);
   const payload = {
     id,
     name: userName,
@@ -77,6 +79,7 @@ router.post('/', authenticate, validateUser, async (req, res) => {
     department: userDepartment || null,
     role: userRole,
     status: userStatus,
+    password: hashedPassword
   };
 
   const result = await insertOrUpdate('users', payload, req.user.id);

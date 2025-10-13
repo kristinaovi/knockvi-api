@@ -38,6 +38,7 @@ app.use("/inventory", inventoryRoutes);
 app.use("/api/roles", rolesRouter);
 
 
+app.use('/dashboards', require('./routes/dashboards'));
 
 // Auth routes
 const auth = require('./routes/auth');
