@@ -34,6 +34,7 @@ app.use('/production', require('./routes/production'));
 app.use('/customers', customersRoute)
 app.use("/inventory", inventoryRoutes);
 
+app.use('/dashboards', require('./routes/dashboards'));
 
 // Auth routes
 const auth = require('./routes/auth');
