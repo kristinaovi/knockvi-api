@@ -12,10 +12,12 @@ router.get('/', authenticate, async (req, res) => {
 
   let sql = `
     SELECT spd.*, pod.line AS po_line, p.price AS price, pod.original_quantity,
-           p.code AS part_code, p.name AS part_name, p.pack_carton_quantity AS part_pack_carton_quantity
+           p.code AS part_code, p.name AS part_name, p.pack_carton_quantity AS part_pack_carton_quantity,
+           po.ppap_no
     FROM shipping_plan_detail spd
     LEFT JOIN purchase_order_details pod ON spd.purchase_order_detail_id = pod.id
     LEFT JOIN parts p ON p.id=pod.part_id
+    LEFT JOIN purchase_orders po ON pod.purchase_order_id = po.id
     WHERE spd.deleted_at IS NULL
   `;
   const values = [];
@@ -59,9 +61,9 @@ router.post('/', authenticate, validateSPD, async (req, res) => {
       // UPDATE
       const [r] = await db.query(
         `UPDATE shipping_plan_detail
-         SET shipping_plan_id = ?, purchase_order_detail_id = ?, actual_quantity = ?, carton = ?, pallete = ?, note = ?, updated_by = ?, updated_at = NOW()
+         SET shipping_plan_id = ?, purchase_order_detail_id = ?, actual_quantity = ?, carton = ?, pallete = ?, updated_by = ?, updated_at = NOW()
          WHERE id = ?`,
-        [spId, podId, qty, cartonVal, palleteVal, noteVal, userId, id]
+        [spId, podId, qty, cartonVal, palleteVal, userId, id]
       );
       const [[updatedRow]] = await db.query(`SELECT * FROM shipping_plan_detail WHERE id = ?`, [id]);
       result = updatedRow;
@@ -69,9 +71,9 @@ router.post('/', authenticate, validateSPD, async (req, res) => {
       // INSERT
       const [ins] = await db.query(
         `INSERT INTO shipping_plan_detail
-         (shipping_plan_id, purchase_order_detail_id, actual_quantity, carton, pallete, note, created_by, created_at)
-         VALUES (?, ?, ?, ?, ?, ?, ?, NOW())`,
-        [spId, podId, qty, cartonVal, palleteVal, noteVal, userId]
+         (shipping_plan_id, purchase_order_detail_id, actual_quantity, carton, pallete, created_by, created_at)
+         VALUES (?, ?, ?, ?, ?, ?, NOW())`,
+        [spId, podId, qty, cartonVal, palleteVal, userId]
       );
       const insertId = ins.insertId;
       const [[newRow]] = await db.query(`SELECT * FROM shipping_plan_detail WHERE id = ?`, [insertId]);
@@ -82,7 +84,7 @@ router.post('/', authenticate, validateSPD, async (req, res) => {
     res.json({ success: true, data: result });
   } catch (err) {
     console.error('Failed to save shipping_plan_detail:', err);
-    res.status(500).json({ error: 'Failed to save shipping_plan_detail' });
+    res.status(500).json({ error: 'Failed to save shipping_plan_detail', 'msg': err });
   }
 });
 

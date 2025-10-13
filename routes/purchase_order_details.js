@@ -11,27 +11,42 @@ router.get('/', authenticate, async (req, res) => {
   const withTrashed = req.query.with_trashed === 'true'
   const { filterSql, values } = buildFilterQuery(req.query, 'pod.', withTrashed)
   const sortClause = applySorting(req.query, 'pod.id')
+
   const [rows] = await db.query(`
-SELECT
-  pod.*,
-  p.name AS part_name,
-  p.code AS part_code,
-  po.pecgi_no,
-  po.ppap_no,
-  po.requested_date,
-  DATE_FORMAT(po.requested_date, '%Y-%m-%d') AS request_date_formatted,
+    SELECT
+      pod.*,
+      p.name AS part_name,
+      p.code AS part_code,
+      po.pecgi_no,
+      po.ppap_no,
+      pod.requested_date,
+      DATE_FORMAT(pod.requested_date, '%Y-%m-%d') AS request_date_formatted,
 
-  0 AS shipped_qty,              -- selalu nol
-  pod.original_quantity AS open_quantity -- open qty = issued qty (tidak berkurang)
-FROM purchase_order_details pod
-LEFT JOIN parts p ON pod.part_id = p.id
-LEFT JOIN purchase_orders po ON pod.purchase_order_id = po.id
-${filterSql}
-${sortClause}
+      pod.original_quantity AS open_quantity, -- tetap sama
 
+      -- 💡 Tambahan kolom baru: sisa (remaining quantity)
+      (
+        pod.original_quantity 
+        - IFNULL((
+            SELECT SUM(spd.actual_quantity)
+            FROM shipping_plan_detail spd
+            JOIN shipping_plans sp ON spd.shipping_plan_id = sp.id
+            WHERE spd.purchase_order_detail_id = pod.id
+              AND spd.deleted_at IS NULL
+              AND sp.deleted_at IS NULL
+          ), 0)
+      ) AS shipped_qty
+
+    FROM purchase_order_details pod
+    LEFT JOIN parts p ON pod.part_id = p.id
+    LEFT JOIN purchase_orders po ON pod.purchase_order_id = po.id
+    ${filterSql}
+    ${sortClause}
   `, values)
+
   res.json(rows)
 })
+
 
 // POST /purchase_order_details
 router.post('/', authenticate, validatePOD, async (req, res) => {

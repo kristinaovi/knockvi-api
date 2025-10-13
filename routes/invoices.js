@@ -20,15 +20,16 @@ SELECT inv.id,
        inv.vessel_flight,
        inv.container,
        inv.etd_nkb,
-       inv.eta_customer,
        inv.ship_method,
        inv.seq,
        inv.customer_id,
        c.name AS customer_name,
        c.code AS customer_code,
        inv.created_at,
-       inv.updated_at
+       inv.updated_at,
+       sp.etd_cust AS eta_customer
 FROM invoices inv
+LEFT JOIN shipping_plans sp ON sp.invoice_id = inv.id
 LEFT JOIN customers c ON inv.customer_id = c.id
   ${filterSql} ${sortClause}
 `, values);

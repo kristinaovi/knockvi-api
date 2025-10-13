@@ -6,6 +6,8 @@ const changePasswordRoute = require('./routes/change-password');
 const app = express();
 const customersRoute = require('./routes/customers');
 const inventoryRoutes = require('./routes/inventory');
+const rolesRouter = require('./routes/roles'); // pastikan path sesuai struktur project kamu
+
 
 
 // CORS configuration
@@ -33,6 +35,8 @@ app.use('/users', require('./routes/users'));
 app.use('/production', require('./routes/production'));
 app.use('/customers', customersRoute)
 app.use("/inventory", inventoryRoutes);
+app.use("/api/roles", rolesRouter);
+
 
 
 // Auth routes
